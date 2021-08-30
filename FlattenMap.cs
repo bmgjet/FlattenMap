@@ -14,14 +14,16 @@ namespace Oxide.Plugins
     [Description("Flatten all BaseEntitys on the server into prefabs in the Map File.")]
 
     //Known Issues
-    //IO Doesnt Copy (needs to go into Rust Edits XML Serialised IO Data in MapData)
+    //IO Doesnt Copy (Complex IO, is being worked on)
     //Roofs Dont Shape when manually graded (need to use RE's SerialisedBlocks XML in MapData)
     //Leave Roofs unset so players can manually set in rust edit
+    //Dont run on your live sever, Make a copy and run on a seperate one incase if fucked it some how.
 
     public class FlattenMap : RustPlugin
     {
         uint hazmat_suit = 199492240;
         uint scientistsuit = 1402387961;
+        uint NPC_Spawner = 2359528520;
         List<PrefabData> MapPrefabs = new List<PrefabData>();
         List<IOEntity> FoundIO = new List<IOEntity>();
         List<SerializedIOEntity> IO = new List<SerializedIOEntity>();
@@ -45,6 +47,27 @@ namespace Oxide.Plugins
             "assets/prefabs/player/", //Remove players
             "assets/prefabs/plants/", //Remove Plants
             "assets/prefabs/voiceaudio/boomboxportable/"
+        };
+        public static Dictionary<uint, string> Guns = new Dictionary<uint, string>
+        {
+            {1978739833,"rifle.ak"},
+            {1665481300,"file.bolt"},
+            {3474489095,"shotgun.double"},
+            {2620171289,"rifle.l96"},
+            {844375121,"rifle.lr300"},
+            {1440914039,"rifle.m249"},
+            {1517089664,"rifle.m39"},
+            {2293870814,"pistol.m92"},
+            {2545523575,"smg.mp5"},
+            {4279856314,"pistol.nailgun"},
+            {2696589892,"shotgun.waterpipe"},
+            {3305012504,"pistol.python"},
+            {2477536592,"pistol.revolver"},
+            {554582418,"shotgun.pump"},
+            {563371667,"pistol.semiauto"},
+            {3759841439,"smg.2"},
+            {1877401463,"shotgun.spas12"},
+            {3243900999,"smg.thompson"}
         };
         //prefab id remapping
         Dictionary<uint, uint> twig = new Dictionary<uint, uint> {
@@ -168,15 +191,6 @@ namespace Oxide.Plugins
             {
                 this.fullPath = _io.PrefabName;
                 this.position = _io.transform.position;
-                var inputs = _io.inputs.Select(input => new Dictionary<string, object>
-                    {
-                        {"connectedID", input.connectedTo.entityRef.uid},
-                        {"connectedToSlot", input.connectedToSlot},
-                        {"niceName", input.niceName},
-                        {"type", (int) input.type}
-                    })
-    .Cast<object>()
-    .ToList();
 
                 List<SerializedConnectionData> IOin = new List<SerializedConnectionData>();
                 for (int i = 0; i < _io.inputs.Length; i++)
@@ -194,7 +208,7 @@ namespace Oxide.Plugins
                         IOin.Add(entry);
                     }
                 }
-                this.inputs =  IOin.ToArray();
+                this.inputs = IOin.ToArray();
 
                 List<SerializedConnectionData> IOout = new List<SerializedConnectionData>();
                 for (int i = 0; i < _io.outputs.Length; i++)
@@ -218,7 +232,10 @@ namespace Oxide.Plugins
                 this.frequency = ((_io is RFBroadcaster) ? (_io as RFBroadcaster).frequency : ((_io is RFReceiver) ? (_io as RFReceiver).frequency : 0));
                 this.unlimitedAmmo = false;
                 this.peaceKeeper = (_io is AutoTurret && (_io as AutoTurret).PeacekeeperMode());
-                this.autoTurretWeapon = ((_io is AutoTurret) ? (_io as AutoTurret).GetAttachedWeapon().ShortPrefabName : string.Empty);
+                if (_io is AutoTurret)
+                {
+                    this.autoTurretWeapon = FlattenMap.GetGun(_io);
+                }
                 this.branchAmount = ((_io is ElectricalBranch) ? (_io as ElectricalBranch).branchAmount : 0);
                 this.targetCounterNumber = ((_io is PowerCounter) ? (_io as PowerCounter).targetCounterNumber : 0);
                 this.counterPassthrough = (_io is PowerCounter && (_io as PowerCounter).DisplayPassthrough());
@@ -244,12 +261,12 @@ namespace Oxide.Plugins
             public int floors = 1;
             public string phoneName;
         }
-    public class SerializedConnectionData
+        public class SerializedConnectionData
         {
             public SerializedConnectionData()
             {
             }
-             public SerializedConnectionData(IOEntity _IO, bool _input, int _connectedto, int _type)
+            public SerializedConnectionData(IOEntity _IO, bool _input, int _connectedto, int _type)
             {
                 this.fullPath = _IO.gameObject.name;
                 this.position = (_IO.transform.position);
@@ -265,7 +282,7 @@ namespace Oxide.Plugins
         }
 
         //Main flatten code
-        uint flatten(string name, bool ClearFirst = false, bool upgradeparts = true, bool filter = true, bool filterbaseplayers = true, bool FilterZero = true, bool FilterLocks = true, bool replaceplayers = false, bool runio = true)
+        uint flatten(string name, bool ClearFirst = false, bool upgradeparts = true, bool filter = true, bool filterbaseplayers = false, bool FilterZero = true, bool FilterLocks = true, bool replaceplayers = true, bool runio = true)
         {
             MapPrefabs.Clear();
             FoundIO.Clear();
@@ -342,7 +359,7 @@ namespace Oxide.Plugins
                 {
                     if (_baseentity.ToPlayer().IsNpc)
                     {
-                        prefabdatatest.id = scientistsuit;
+                        prefabdatatest.id = NPC_Spawner;//scientistsuit
                     }
                     else
                     {
@@ -370,7 +387,7 @@ namespace Oxide.Plugins
                 World.Serialization.world.prefabs.Add(prefabdatatest);
             }
 
-            if(runio)
+            if (runio)
             {
                 //Does the IO stuff
                 DoSerializedIOEntity();
@@ -387,7 +404,7 @@ namespace Oxide.Plugins
         void DoSerializedIOEntity()
         {
             Puts("Found " + FoundIO.Count.ToString() + " IO Entitys");
-            
+
             foreach (IOEntity _io in FoundIO)
             {
                 //Convert IOEntity into SerializedIOEntity (Rust Edit Format)
@@ -431,6 +448,19 @@ namespace Oxide.Plugins
 
         }
 
+        static string GetGun(IOEntity _io)
+        {
+            try
+            {
+                BaseProjectile gun = (_io as AutoTurret).GetAttachedWeapon();
+                if (gun != null)
+                {
+                    return Guns[gun.prefabID];
+                }
+            }
+            catch { Console.WriteLine("Turret ( " + _io.transform.position + " ): Not a rust edit supported gun"); }
+            return string.Empty;
+        }
         void ReadOldXML(string XML)
         {
             List<SerializedIOEntity> IO = new List<SerializedIOEntity>();
@@ -563,7 +593,6 @@ namespace Oxide.Plugins
                 catch { }
                 IO.Add(RustEdit);
             }
-
         }
 
         string CreateNewXML()
@@ -642,7 +671,7 @@ namespace Oxide.Plugins
                     "<floors>" + io.floors + "</floors>" +
                     "<phoneName>" + io.phoneName + "</phoneName>" +
                     "</SerializedIOEntity>";
-                
+
                 NewXML += newentity;
             }
             //CleanUp
@@ -814,7 +843,7 @@ namespace Oxide.Plugins
         {
             using (Aes aes = Aes.Create())
             {
-                Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(PreFabCount.ToString(), new byte[]{73,118,97,110,32,77,101,100,118,101,100,101,118});
+                Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(PreFabCount.ToString(), new byte[] { 73, 118, 97, 110, 32, 77, 101, 100, 118, 101, 100, 101, 118 });
                 aes.Key = rfc2898DeriveBytes.GetBytes(32);
                 aes.IV = rfc2898DeriveBytes.GetBytes(16);
                 using (MemoryStream memoryStream = new MemoryStream())
@@ -830,6 +859,10 @@ namespace Oxide.Plugins
             }
         }
 
+        private void Unload()
+        {
+            if (Guns != null) Guns = null;
+        }
 
         [ConsoleCommand("flattenmap")]
         private void Consoleflatten(ConsoleSystem.Arg arg)
