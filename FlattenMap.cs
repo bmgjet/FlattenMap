@@ -830,6 +830,8 @@ namespace Oxide.Plugins
                     return (int)flatten(Args[0], bool.Parse(Args[1]), bool.Parse(Args[2]), bool.Parse(Args[3]), bool.Parse(Args[4]), bool.Parse(Args[5]), bool.Parse(Args[6])); //Filter key/code locks
                 case 8:
                     return (int)flatten(Args[0], bool.Parse(Args[1]), bool.Parse(Args[2]), bool.Parse(Args[3]), bool.Parse(Args[4]), bool.Parse(Args[5]), bool.Parse(Args[6]), bool.Parse(Args[7])); //Replace base players
+                case 9:
+                    return (int)flatten(Args[0], bool.Parse(Args[1]), bool.Parse(Args[2]), bool.Parse(Args[3]), bool.Parse(Args[4]), bool.Parse(Args[5]), bool.Parse(Args[6]), bool.Parse(Args[7]), bool.Parse(Args[8])); //try process IO data
                 default:
                     return -1;
             }
