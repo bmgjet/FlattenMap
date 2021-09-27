@@ -1,8 +1,16 @@
-<h1>Flatten Map Plugin</h1>
-<p>Loops though each of the entitys on the server and turns them in to prefabs.<br />Then saves the map in the servers rust root folder.</p>
-<h3><br />Usage:</h3>
-<p><strong><span style="color: #ff0000;">(RUN ON A SEPERATE SERVER NOT YOUR MAIN)<br /><br /></span></strong>Copy the map and .sav files from your main server to a seperate one.<br />Install plugin as usual.<br />Start the server up and run command from either chat or console.</p>
-<h3><br />Command:</h3>
-<p><br /><strong>Console:</strong> flattenmap "newmapname"<br /><strong>Chat:</strong> /flatten "newmapname"<br /><br /><em>Options you can provide after the new map name in order they can be provided.</em></p>
-<p style="padding-left: 40px;"><br />true/false wipe maps prefabs before flatten (useful if you only want player bases)<br />true/false apply building grade to players bases. (will be twig if false)<br />true/false filter out base players / npcs from maps. (if false piles of loot from players/npcs will be where players/npcs would of been)<br />true/false filter out entitys at 0,0,0 (will be server scripts and junk collection)<br />true/false filter out code/key locks<br />true/false replace players/npcs with place holders/spawners<br />true/false try process IO data.</p>
-<p><br /><strong>Example:</strong> <br />(default mode)<br />/flatten "mapdump"<br />(dump map using options)<br />/flatten "mapdump" false true true true true false true</p>
+<h2 class="ipsType_sectionHead">About FlattenMap</h2>
+<div class="ipsType_normal ipsSpacer_top">
+<div class="ipsType_richText ipsContained ipsType_break" data-controller="core.front.core.lightboxedImages">
+<p>This is a tool/plugin that lets you flatten the entitys from your server into the .map file.<br />So basically takes the place of having to use copypaste plugin for each base then import them into rust edit.<br /><br /><span style="font-size: 16px;"><strong>Do Note:</strong></span> You shouldnt be using this on your live server unless you plan to restart it afterwards.<br />The best option is to make a copy of the .sav files are fire up a server locally, This will also prevent any folder permission errors that hosts could have.<br /><br /><span style="font-size: 18px;">Usage:</span></p>
+<p>Copy your map and .sav files to a seperate server, Recommended one on your local machine.<br />Install Oxide and this plugin as usual.<br />Start the server up.<br />Send chat or console command with or without optinal settings.<br />It will create a new map file within the servers root folder with the entitys flattened into it.<br />And No this wont bypass map passwords or break custom prefabs down.<br /><br /><span style="font-size: 18px;">Permission:</span></p>
+<p>Must be admin to call from chat or command must be called from console.<br /><br /><span style="font-size: 18px;">Commands:</span></p>
+<p>Console: flattenmap "newmapname"<br />Chat: /flatten "newmapname"<br /><br /><strong>Options you can provide after the new map name in order they can be provided. If they arnt provided then best defaults will be used.</strong><br />true/false wipe maps prefabs before flatten (useful if you only want player bases)<br />true/false apply building grade to players bases. (will all be twig if false)<br />true/false apply entity filter (will remove a lot of the junk stuff like spawned trees/ore/ect)<br />true/false filter out base players / npcs from maps. (if false piles of loot that was on players/npcs will be where players/npcs would of been)<br />true/false filter out entitys at 0,0,0 (will be server scripts and junk collection)<br />true/false filter out code/key locks<br />true/false replace players/npcs with place holders/spawners<br />true/false try process IO data.</p>
+<p><br />Example:<br />(default mode)<br />/flatten "mapdump"<br />(dump map using options as default would of)<br />/flatten "mapdump" false true true true true true false true<br /><br />Videos of usage:</p>
+https://www.youtube.com/embed/cCuQxI6xvGU<br />https://www.youtube.com/embed/Tr1zUA8kGyM</div>
+<p><br /><span style="font-size: 18px;">Known issues:</span></p>
+<ul>
+<li>Roofs remain twig. (upgrading them automatically like the walls/foundation breaks there auto forming around edges/corners. A fix is in the works but it will take time, You can select them and manually upgrade them fine.)</li>
+<li>Complex IO breaks the IO data. (A fix is also in the works but this will take a while since information in minimal about rustedits IO data so takes a lot of trial and error to find what breaks what. Such as iv found if there is a windmill connected then that IO circuit will be broken and it will stop processing the rest of them since rust edit doesnt allow windmill connection.)</li>
+<li>Playing map after flatten strage stuff happens, (Restart the server strange things happen when all the entitys are known as prefabs to the server).</li>
+</ul>
+</div>
