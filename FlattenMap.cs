@@ -10,11 +10,11 @@ using static ProtoBuf.IOEntity;
 
 namespace Oxide.Plugins
 {
-    [Info("FlattenMap", "bmgjet", "1.0.1")]
+    [Info("FlattenMap", "bmgjet", "1.0.2")]
     [Description("Flatten all BaseEntitys on the server into prefabs in the Map File.")]
 
     //Known Issues
-    //IO Doesnt Copy (Complex IO, is being worked on)
+    //(Complex IO, is being worked on)
     //Roofs Dont Shape when manually graded (need to use RE's SerialisedBlocks XML in MapData)
     //Leave Roofs unset so players can manually set in rust edit
     //Dont run on your live sever, Make a copy and run on a seperate one incase if fucked it some how.
@@ -267,6 +267,7 @@ namespace Oxide.Plugins
             }
             public SerializedConnectionData(IOEntity _IO, bool _input, int _connectedto, int _type)
             {
+
                 this.fullPath = _IO.gameObject.name;
                 this.position = (_IO.transform.position);
                 this.input = _input;
@@ -353,6 +354,20 @@ namespace Oxide.Plugins
                 prefabdatatest.id = _baseentity.prefabID;
                 prefabdatatest.ShouldPool = true;
 
+                //Insert Testgen since windmills not supported by RustEdit
+                if (prefabdatatest.id == 2579372576)
+                {
+                    //Create testgen using current BaseEntity
+                    PrefabData prefabdatareplacement = new PrefabData();
+                    prefabdatareplacement.category = "Decor";
+                    prefabdatareplacement.position = prefabdatatest.position;
+                    prefabdatareplacement.rotation = prefabdatatest.rotation;
+                    prefabdatareplacement.scale = prefabdatatest.scale;
+                    prefabdatareplacement.id = 1216081662;
+                    prefabdatareplacement.ShouldPool = true;
+                    World.Serialization.world.prefabs.Add(prefabdatareplacement);
+                }
+
                 //Replaces baseplayers with hazmat or scientistsuit for npcs
                 if (replaceplayers && _baseentity.ToPlayer() != null)
                 {
@@ -378,7 +393,7 @@ namespace Oxide.Plugins
                     prefabdatatest = BuildBlocks(bb, prefabdatatest);
                 }
                 IOEntity io = _baseentity as IOEntity;
-                if (io != null && upgradeparts)
+                if (io != null)
                 {
                     FoundIO.Add(io);
                 }
@@ -444,7 +459,6 @@ namespace Oxide.Plugins
                     Puts("SerializedIOEntity Done");
                 }
             }
-
         }
 
         static string GetGun(IOEntity _io)
@@ -613,10 +627,10 @@ namespace Oxide.Plugins
                 }
                 else
                 {
+                    newentity += "<inputs>";
                     foreach (SerializedConnectionData scd in io.inputs)
                     {
                         newentity +=
-                        "<inputs>" +
                         "<SerializedConnectionData>" +
                         "<fullPath>" + scd.fullPath + "</fullPath>" +
                         "<position>" +
@@ -627,20 +641,20 @@ namespace Oxide.Plugins
                         "<input>" + scd.input.ToString().ToLower() + "</input>" +
                         "<connectedTo>" + "0" + "</connectedTo>" + //"<connectedTo>" + scd.connectedTo + "</connectedTo>" +
                         "<type>" + scd.type + "</type>" +
-                        "</SerializedConnectionData>" +
-                        "</inputs>";
+                        "</SerializedConnectionData>";
                     }
+                    newentity += "</inputs>";
                 }
                 if (io.outputs.Length == 0)
                 {
-                    newentity += "<outputs ><SerializedConnectionData xsi:nil=\"true\" /></outputs>";
+                    newentity += "<outputs><SerializedConnectionData xsi:nil=\"true\" /></outputs>";
                 }
                 else
                 {
+                    newentity += "<outputs>";
                     foreach (SerializedConnectionData scd in io.outputs)
                     {
                         newentity +=
-                        "<outputs>" +
                         "<SerializedConnectionData>" +
                         "<fullPath>" + scd.fullPath + "</fullPath>" +
                         "<position>" +
@@ -651,9 +665,9 @@ namespace Oxide.Plugins
                         "<input>" + scd.input.ToString().ToLower() + "</input>" +
                         "<connectedTo>" + "0" + "</connectedTo>" + //"<connectedTo>" + scd.connectedTo + "</connectedTo>" +
                         "<type>" + scd.type + "</type>" +
-                        "</SerializedConnectionData>" +
-                        "</outputs>";
+                        "</SerializedConnectionData>";
                     }
+                    newentity += "</outputs>";
                 }
                 newentity +=
                     "<accessLevel>" + io.accessLevel + "</accessLevel>" +
@@ -676,6 +690,8 @@ namespace Oxide.Plugins
             //CleanUp
             NewXML = NewXML.Replace("<phoneName></phoneName>", "<phoneName />").Replace("<rcIdentifier></rcIdentifier>", "<rcIdentifier />").Replace("<autoTurretWeapon></autoTurretWeapon>", "<autoTurretWeapon />").Replace("<outputs></outputs>", "<outputs><SerializedConnectionData xsi:nil=\"true\" /></outputs>");
             NewXML += "</entities></SerializedIOData>";
+            //Fix windmills having no IO by using a testgen in them.
+            NewXML = NewXML.Replace("assets/prefabs/deployable/windmill/windmillsmall/electric.windmill.small.prefab", "assets/prefabs/deployable/playerioents/generators/generator.small.prefab");
             return NewXML;
         }
 
