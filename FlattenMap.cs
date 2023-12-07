@@ -10,7 +10,7 @@ using static ProtoBuf.IOEntity;
 
 namespace Oxide.Plugins
 {
-    [Info("FlattenMap", "bmgjet", "1.0.2")]
+    [Info("FlattenMap", "bmgjet", "1.0.3")]
     [Description("Flatten all BaseEntitys on the server into prefabs in the Map File.")]
 
     //Known Issues
@@ -215,7 +215,7 @@ namespace Oxide.Plugins
                     try
                     {
                         SerializedConnectionData entry = new SerializedConnectionData();
-                        entry.connectedTo = (int)_io.outputs[i].connectedTo.entityRef.uid;
+                        entry.connectedTo = _io.outputs[i].connectedTo.entityRef.uid.Value;
                         entry.fullPath = _io.outputs[i].connectedTo.ioEnt.PrefabName;
                         entry.position = _io.outputs[i].connectedTo.ioEnt.transform.position;
                         entry.type = 0;
@@ -265,7 +265,7 @@ namespace Oxide.Plugins
             public SerializedConnectionData()
             {
             }
-            public SerializedConnectionData(IOEntity _IO, bool _input, int _connectedto, int _type)
+            public SerializedConnectionData(IOEntity _IO, bool _input, ulong _connectedto, int _type)
             {
 
                 this.fullPath = _IO.gameObject.name;
@@ -277,7 +277,7 @@ namespace Oxide.Plugins
             public string fullPath;
             public VectorData position;
             public bool input;
-            public int connectedTo;
+            public ulong connectedTo;
             public int type;
         }
 
@@ -503,7 +503,7 @@ namespace Oxide.Plugins
                             cd.position.y = float.Parse(pos2.Split(new string[] { "<y>" }, StringSplitOptions.None)[1].Split(new string[] { "</y>" }, StringSplitOptions.None)[0]);
                             cd.position.z = float.Parse(pos2.Split(new string[] { "<z>" }, StringSplitOptions.None)[1].Split(new string[] { "</z>" }, StringSplitOptions.None)[0]);
                             cd.input = bool.Parse(_in.Split(new string[] { "<input>" }, StringSplitOptions.None)[1].Split(new string[] { "</input>" }, StringSplitOptions.None)[0]);
-                            cd.connectedTo = int.Parse(_in.Split(new string[] { "<connectedTo>" }, StringSplitOptions.None)[1].Split(new string[] { "</connectedTo>" }, StringSplitOptions.None)[0]);
+                            cd.connectedTo = ulong.Parse(_in.Split(new string[] { "<connectedTo>" }, StringSplitOptions.None)[1].Split(new string[] { "</connectedTo>" }, StringSplitOptions.None)[0]);
                             cd.fullPath = _in.Split(new string[] { "<fullPath>" }, StringSplitOptions.None)[1].Split(new string[] { "</fullPath>" }, StringSplitOptions.None)[0];
                             connections.Add(cd);
                         }
@@ -528,7 +528,7 @@ namespace Oxide.Plugins
                             cd.position.y = float.Parse(pos2.Split(new string[] { "<y>" }, StringSplitOptions.None)[1].Split(new string[] { "</y>" }, StringSplitOptions.None)[0]);
                             cd.position.z = float.Parse(pos2.Split(new string[] { "<z>" }, StringSplitOptions.None)[1].Split(new string[] { "</z>" }, StringSplitOptions.None)[0]);
                             cd.input = bool.Parse(_out.Split(new string[] { "<input>" }, StringSplitOptions.None)[1].Split(new string[] { "</input>" }, StringSplitOptions.None)[0]);
-                            cd.connectedTo = int.Parse(_out.Split(new string[] { "<connectedTo>" }, StringSplitOptions.None)[1].Split(new string[] { "</connectedTo>" }, StringSplitOptions.None)[0]);
+                            cd.connectedTo = ulong.Parse(_out.Split(new string[] { "<connectedTo>" }, StringSplitOptions.None)[1].Split(new string[] { "</connectedTo>" }, StringSplitOptions.None)[0]);
                             cd.fullPath = _out.Split(new string[] { "<fullPath>" }, StringSplitOptions.None)[1].Split(new string[] { "</fullPath>" }, StringSplitOptions.None)[0];
                             connections.Add(cd);
                         }
